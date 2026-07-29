@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleName</key>                 <string>dnotes</string>
+    <key>CFBundleDisplayName</key>          <string>dnotes</string>
+    <key>CFBundleIdentifier</key>           <string>com.diffora.dnotes</string>
+    <key>CFBundleExecutable</key>           <string>dnotes</string>
+    <!-- Generated from images/icon.png by scripts/bundle.sh. Finder and
+         notifications only: the menu bar item draws its own template glyph. -->
+    <key>CFBundleIconFile</key>             <string>AppIcon</string>
+    <key>CFBundlePackageType</key>          <string>APPL</string>
+    <key>CFBundleShortVersionString</key>   <string>0.1.0</string>
+    <key>CFBundleVersion</key>              <string>1</string>
+    <key>LSMinimumSystemVersion</key>       <string>14.0</string>
+    <key>NSHighResolutionCapable</key>      <true/>
+    <!-- Was true (menu bar only). Now a regular app with a Dock icon: a full menu
+         bar hid the status item, and the Dock is somewhere the icon is always
+         reachable. The capture panel stays non-activating either way. -->
+    <key>LSUIElement</key>                  <false/>
+</dict>
+</plist>

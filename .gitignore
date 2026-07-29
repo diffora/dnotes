@@ -1,0 +1,11 @@
+.build/
+.swiftpm/
+*.app/
+*.dmg
+.DS_Store
+
+# The notes themselves. This folder is both the project and, by default, the notes
+# folder — but the notes are personal and the repository is public, so they stay on
+# disk and out of git. The app reads and writes them exactly as before.
+notes.md
+[0-9][0-9][0-9][0-9]-[0-9][0-9].md
