@@ -9,8 +9,38 @@ struct SettingsView: View {
     /// switch that was just flipped, not to the app forever after.
     @State private var dockIconWasSwitched = false
 
+    /// Read from the system rather than stored, and re-read whenever the app comes
+    /// forward — the user can change this in System Settings while this window is open.
+    @State private var loginState = LoginItem.State.off
+    @State private var loginError: String?
+
     var body: some View {
         Form {
+            Section("Startup") {
+                Toggle("Start dnotes at login", isOn: Binding(
+                    get: { loginState == .on },
+                    set: { setStartAtLogin($0) }))
+                Text("Registers the copy of dnotes you turn this on from, so switch it on "
+                     + "from the one in Applications rather than a build sitting in a "
+                     + "folder somewhere.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                if loginState == .needsApproval {
+                    HStack {
+                        Text("Turned off in System Settings — only you can turn it back on there.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Button("Open Login Items") { LoginItem.openSystemSettings() }
+                    }
+                }
+                // A silently dead setting is the thing this app refuses to ship — see the
+                // hotkey conflict message below.
+                if let loginError {
+                    Text(loginError).font(.caption).foregroundStyle(.red)
+                }
+            }
+
             Section("Appearance") {
                 Toggle("Show in Dock", isOn: Binding(
                     get: { delegate.composition.settings.showsDockIcon },
@@ -90,6 +120,25 @@ struct SettingsView: View {
         }
         .formStyle(.grouped)
         .frame(width: 460)
+        .onAppear { loginState = LoginItem.state }
+        .onReceive(NotificationCenter.default.publisher(
+            for: NSApplication.didBecomeActiveNotification)) { _ in
+            loginState = LoginItem.state
+        }
+    }
+
+    private func setStartAtLogin(_ on: Bool) {
+        do {
+            try LoginItem.set(on)
+            loginError = nil
+        } catch {
+            loginError = "Could not \(on ? "turn this on" : "turn this off") — "
+                + error.localizedDescription
+        }
+        // Always from the system, never from what was asked for: registration can
+        // succeed and still land on `requiresApproval`, and the checkbox has to show
+        // where the machine ended up rather than where the click aimed.
+        loginState = LoginItem.state
     }
 
     private var captureKey: String { delegate.composition.settings.captureHotKey.displayString }

@@ -284,6 +284,19 @@ changes.
   Switching live needs `NSApp.activate` afterwards or the menu bar is left undrawn and
   the settings window unresponsive, and Settings offers a restart beside the switch for
   what re-activation does not settle.
+- **Starting at login, added 2026-07-30.** A switch in Settings → Startup, backed by
+  `SMAppService.mainApp`. It follows from the setting above: an app reached by hotkey is
+  no use unless it is already running, and until now that meant launching it by hand
+  after every reboot. **There is no stored preference behind it** — macOS keeps the
+  answer in System Settings → Login Items, where the user can change it without telling
+  the app, so the status is read every time rather than mirrored into `UserDefaults`
+  where the two copies would drift apart. Ad-hoc signing is enough: measured on a bundle
+  signed `-` with no Team ID, and again under this app's own bundle id, registration
+  goes `notFound` → `enabled` and unregistration back. `requiresApproval` — the user
+  having switched it off by hand — is shown with a button that opens the right pane,
+  because the app cannot override that and should not pretend to.
+  Registration follows the running bundle, so turning it on from a build in a folder
+  registers *that* build; the caption in Settings says so, since the checkbox cannot.
 - A single reverse-chronological list of all entries. Days are separators in the
   flow. There is no folder sidebar and no split between "notes" and "tasks".
 - Search in the toolbar filters the list by substring as you type (case- and

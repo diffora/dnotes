@@ -57,6 +57,23 @@ Dock icon **on**:
 - [ ] "Restart dnotes" appears only after the switch is touched, and relaunches into the
       chosen mode.
 
+## Start at login (added 2026-07-30)
+
+Nothing here is unit-tested: the state lives in the system, not in this app. That the
+API works under ad-hoc signing and under this bundle id was measured on a harness; what
+is left is the wiring.
+
+- [ ] Settings → Startup → "Start dnotes at login" turns on, and the app appears in
+      System Settings → General → Login Items.
+- [ ] Turning it off removes it from that list.
+- [ ] Switch it off in **System Settings** while dnotes' Settings window is open, then
+      bring dnotes forward: the checkbox has followed the system rather than kept
+      showing its own answer.
+- [ ] Reboot with it on: dnotes is running, and `⌥Space` works without launching
+      anything by hand.
+- [ ] It is the copy in `/Applications` that started, not a build from a folder — this
+      is what the caption warns about, and it is worth checking once.
+
 - [ ] **Re-verify the primary scenario in both modes:** `⌥Space` from another app still
       does not steal focus, and `⏎` returns it. The panel is non-activating because of
       its style mask, not the activation policy — but this is the one assumption the
