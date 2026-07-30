@@ -1,11 +1,14 @@
 # dnotes
 
-A macOS menu-bar app for writing a thought down in under two seconds, into plain
-markdown files you own.
+A macOS app for writing a thought down in under two seconds, into plain markdown files
+you own.
 
 Press `⌥Space` anywhere, type one line, press `⏎`. Focus returns to whatever you were
 doing and the line is appended to today's heading in `YYYY-MM.md`. Delete the app and
 the notes are still there, readable in any editor and diffable in git.
+
+The hotkey is the way in, from any app including fullscreen ones. There is a Dock icon
+and a menu bar item too, but neither is where the app is meant to be used from.
 
 ```markdown
 ## 2026-07-29
@@ -14,6 +17,19 @@ the notes are still there, readable in any editor and diffable in git.
 - [x] run their artifact analysis tool
 - single node metrics — ABC-1234 #infra
 ```
+
+![The notes list in dark mode: days as separators, tags as coloured chips at the end of each row](images/screenshot-dark.png)
+
+<details>
+<summary>The same list in light mode</summary>
+
+Tag colours are picked per theme rather than dimmed: a tag is text, so each colour has to
+stay readable against the surface it sits on. That is why the light steps are deep instead
+of bright.
+
+![The same list in light mode](images/screenshot-light.png)
+
+</details>
 
 ## What it is, and is not
 
@@ -44,12 +60,18 @@ implementation plan that produced the code is in [plan/](plan/).
 Hold `⌘` to make a URL or an issue key in a line live, then click it. Issue keys need a
 URL template in Settings — only you know which tracker `ABC-1234` belongs to.
 
+Tags are coloured, and each one keeps its colour. By default they are lifted out of the
+text into chips at the end of the row, so a note reads without them; Settings switches
+them back into the text. Right-click a chip above the list to pick a tag's colour by hand.
+Either way the file is unchanged — a tag is plain text in the line, so editing a row shows
+it exactly as stored.
+
 ## Building
 
 Needs macOS 14 or newer and a Swift 6.2 toolchain. No dependencies.
 
 ```sh
-./scripts/test.sh     # 187 tests
+./scripts/test.sh     # 216 tests
 ./scripts/bundle.sh   # produces dnotes.app
 open dnotes.app
 ```
@@ -71,9 +93,11 @@ described in the release notes. Building from source avoids that entirely.
 
 Logic lives in `DnotesCore`, which imports no AppKit and no SwiftUI, and is where the
 tests are. `Dnotes` is the shell: status item, a non-activating `NSPanel` for capture, an
-`NSWindow` for the list, a main menu. AppKit owns that shell deliberately — an accessory
-app has no menu bar for SwiftUI to hang shortcuts on, and keyboard and pointer behaviour
-this central should not depend on which view happens to hold focus.
+`NSWindow` for the list, a main menu. AppKit owns that shell deliberately: keyboard and
+pointer behaviour this central should not depend on which view happens to hold focus, and
+the shell was first written for a menu-bar-only app, which has no menu bar for SwiftUI to
+hang shortcuts on. The app became a regular one with a Dock icon — a full menu bar in the
+frontmost app hid the status item — and the shell was already in the right place.
 
 **Storage is behind a protocol.** `NotesRepository` is the seam;
 `MarkdownNotesRepository` is the file-backed implementation and `InMemoryNotesRepository`

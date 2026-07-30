@@ -21,6 +21,9 @@ struct EntryText: NSViewRepresentable {
     let text: String
     let issueURLTemplate: String
     let isDone: Bool
+    /// Asked per tag rather than handed a palette, so the row cannot hold a stale copy
+    /// of a colour the user has just overridden.
+    let tagColor: (String) -> NSColor
     let onClick: (Int) -> Void
 
     func makeNSView(context: Context) -> LinkLabel {
@@ -38,15 +41,19 @@ struct EntryText: NSViewRepresentable {
 
     func updateNSView(_ label: LinkLabel, context: Context) {
         label.onClick = onClick
+        label.tagColor = tagColor
         label.apply(text: text, issueURLTemplate: issueURLTemplate, isDone: isDone)
     }
 }
 
 final class LinkLabel: NSTextField {
     private var links: [(range: NSRange, url: URL)] = []
+    private var tags: [(range: NSRange, tag: String)] = []
     private var content = ""
     private var template = ""
     private var done = false
+
+    var tagColor: ((String) -> NSColor)?
 
     /// Polled rather than driven by events: ⌘ going down produces no event this view can
     /// rely on — `flagsChanged` only arrives while the app is active, and this window
@@ -78,6 +85,30 @@ final class LinkLabel: NSTextField {
 
         links = EntryLinks.spans(in: content, issueURLTemplate: template)
             .map { (NSRange($0.range, in: content), $0.url) }
+
+        // Tags first, links second, so where the two disagree the link wins — it is the
+        // one a click acts on, and a link that does not look like one is a trap. They
+        // overlap only in odd cases (`#tag.com` is a tag to the scanner and a URL to the
+        // detector), but two colours fighting over the same glyphs is worth ruling out.
+        tags = TagScanner.spans(in: content)
+            .map { (NSRange($0.range, in: content), $0.tag) }
+            .filter { candidate in !links.contains { NSIntersectionRange($0.range, candidate.range).length > 0 } }
+
+        // Semibold at the body size: weight, not just hue, separates a tag from a link,
+        // which is what keeps the two apart for a reader who cannot rely on colour.
+        let semibold = NSFont.systemFont(
+            ofSize: NSFont.preferredFont(forTextStyle: .body).pointSize, weight: .semibold)
+
+        for tag in tags {
+            // A completed entry goes quiet all over: a bright tag on a struck-through
+            // line would advertise the one thing there is nothing left to do about.
+            attributed.addAttributes([
+                .font: semibold,
+                .foregroundColor: done
+                    ? NSColor.secondaryLabelColor
+                    : (tagColor?(tag.tag) ?? NSColor.labelColor),
+            ], range: tag.range)
+        }
 
         for (index, link) in links.enumerated() {
             // Colour always, underline only while the link is live. In a list of short

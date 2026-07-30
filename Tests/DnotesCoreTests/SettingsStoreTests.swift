@@ -41,3 +41,23 @@ import Testing
     #expect(HotKeyCombo.mainWindowDefault.displayString == "⌥⇧Space")
     #expect(HotKeyCombo(keyCode: 0, modifiers: HotKeyCombo.command).displayString == "⌘A")
 }
+
+// MARK: - tag layout
+
+@MainActor
+@Test func tagLayoutDefaultsToTrailingAndIsRemembered() {
+    let defaults = UserDefaults(suiteName: "dnotes.tests.\(UUID().uuidString)")!
+    #expect(SettingsStore(defaults: defaults).tagLayout == .trailing)
+
+    SettingsStore(defaults: defaults).tagLayout = .inline
+    #expect(SettingsStore(defaults: defaults).tagLayout == .inline)
+}
+
+/// A value written by another build, or edited by hand, must not leave the list in a
+/// layout that does not exist.
+@MainActor
+@Test func anUnknownStoredTagLayoutFallsBackToTheDefault() {
+    let defaults = UserDefaults(suiteName: "dnotes.tests.\(UUID().uuidString)")!
+    defaults.set("sideways", forKey: "dnotes.tagLayout")
+    #expect(SettingsStore(defaults: defaults).tagLayout == .trailing)
+}

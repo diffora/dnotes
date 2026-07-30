@@ -27,6 +27,22 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
             }
 
+            Section("Tags") {
+                Picker("Show tags", selection: Binding(
+                    get: { delegate.composition.settings.tagLayout },
+                    set: { delegate.composition.settings.tagLayout = $0 })) {
+                    ForEach(TagLayout.allCases, id: \.self) { layout in
+                        Text(layout.title).tag(layout)
+                    }
+                }
+                Text("Either way the line in the file is unchanged — a tag is part of the "
+                     + "text. At the end of the row the text reads without its tags, but "
+                     + "editing opens the stored line, tags included. Right-click a tag "
+                     + "chip above the list to pick its colour by hand.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
             Section("Shortcuts") {
                 LabeledContent("Capture") {
                     Text(delegate.composition.settings.captureHotKey.displayString).monospaced()

@@ -21,14 +21,23 @@ struct MainWindowView: View {
             )
             header
             Divider()
-            TagChipsView(model: model)
+            TagChipsView(model: model, settings: settings)
             Divider()
             listBody
             shortcuts
         }
         .frame(minWidth: 520, minHeight: 380)
         .background(VisualEffectBackground())
-        .task { await model.load() }
+        .task {
+            await model.load()
+            settings.assignColors(for: model.allTags)
+        }
+        // Colours are handed out here rather than lazily inside `colorSlot`, which the
+        // views call while drawing: assigning during a body pass would mean mutating
+        // observable state in the middle of the update that reads it.
+        .onChange(of: model.allTags) { _, tags in
+            settings.assignColors(for: tags)
+        }
     }
 
     // MARK: - pieces
@@ -102,6 +111,8 @@ struct MainWindowView: View {
         EntryRowView(
             entry: entry,
             issueURLTemplate: settings.issueURLTemplate,
+            tagColor: { settings.color(for: $0).nsColor },
+            tagLayout: settings.tagLayout,
             isSelected: list.selection == entry.id,
             isEditing: list.editing == entry.id,
             editingText: Binding(get: { list.editingText },

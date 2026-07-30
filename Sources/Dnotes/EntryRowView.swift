@@ -4,6 +4,8 @@ import DnotesCore
 struct EntryRowView: View {
     let entry: NoteEntry
     let issueURLTemplate: String
+    let tagColor: (String) -> NSColor
+    let tagLayout: TagLayout
     let isSelected: Bool
     let isEditing: Bool
     @Binding var editingText: String
@@ -47,16 +49,20 @@ struct EntryRowView: View {
                 // AppKit draws this so a link gets the pointing-hand cursor and takes
                 // its own clicks; everything else comes back through `onClick`.
                 EntryText(
-                    text: entry.text,
+                    text: shownText,
                     issueURLTemplate: issueURLTemplate,
                     isDone: entry.isDone,
+                    tagColor: tagColor,
                     onClick: { clicks in
                         if clicks >= 2 { onBeginEdit() } else { onSelect() }
                     }
                 )
                 .fixedSize(horizontal: false, vertical: true)
             }
-            Spacer(minLength: 0)
+            Spacer(minLength: 8)
+            if !isEditing, !trailingTags.isEmpty {
+                trailingChips
+            }
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 5)
@@ -77,6 +83,59 @@ struct EntryRowView: View {
             Divider()
             Button("Delete", action: onDelete)
         }
+    }
+
+    // MARK: - which layout this row is drawn in
+
+    /// The text the row shows. In the trailing layout the tags come out of it — unless
+    /// that would leave nothing to show, which is what a note like `#daily` would do.
+    /// A blank row with a chip floating on the right reads as a bug, so such a line keeps
+    /// its tags inline and simply looks like the other layout. Better an exception nobody
+    /// notices than an empty row.
+    private var shownText: String {
+        guard tagLayout == .trailing else { return entry.text }
+        let stripped = TagScanner.stripping(entry.text)
+        return stripped.isEmpty ? entry.text : stripped
+    }
+
+    private var trailingTags: [String] {
+        guard tagLayout == .trailing, !TagScanner.stripping(entry.text).isEmpty else { return [] }
+        return entry.tags
+    }
+
+    /// Deliberately not buttons. The chip bar above the list filters on click; these are
+    /// the same tag in the same shape, so making them clickable too would be consistent —
+    /// but they sit inside a row whose own clicks select it and whose double-click starts
+    /// an edit, and a target that swallows those is worse than one that does nothing.
+    private var trailingChips: some View {
+        HStack(spacing: 4) {
+            ForEach(entry.tags, id: \.self) { tag in
+                // The `#` stays, even though the pill shape already says "tag" and
+                // dropping it would read calmer: it is what the chip bar above shows and
+                // what the line in the file actually contains, and a chip that quietly
+                // renames `#perf` to `perf` starts to look like a field of its own.
+                Text("#\(tag)")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(entry.isDone
+                                     ? AnyShapeStyle(.secondary)
+                                     : AnyShapeStyle(Color(nsColor: tagColor(tag))))
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 1)
+                    .background(
+                        entry.isDone
+                            ? AnyShapeStyle(.quaternary)
+                            : AnyShapeStyle(Color(nsColor: tagColor(tag)).opacity(0.16)),
+                        in: Capsule()
+                    )
+                    // Without this a run of tags on a narrow window squeezes the note's
+                    // text down to nothing; the chips give way first.
+                    .lineLimit(1)
+                    .layoutPriority(-1)
+            }
+        }
+        // Aligned with the first line of a wrapped entry rather than centred on it: the
+        // chips belong to the line the text starts on, not to the middle of a paragraph.
+        .padding(.top, 1)
     }
 
     private var rowBackground: Color {

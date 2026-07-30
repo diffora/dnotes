@@ -9,3 +9,6 @@
 # disk and out of git. The app reads and writes them exactly as before.
 notes.md
 [0-9][0-9][0-9][0-9]-[0-9][0-9].md
+
+# Brainstorming mockups (visual companion scratch).
+.superpowers/

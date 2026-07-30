@@ -303,6 +303,47 @@ changes.
   choice is remembered across launches.
 - Appearance: system fonts, `NSVisualEffectView` as the background, automatic
   light and dark themes.
+- **Tags are coloured** (added 2026-07-30, at the owner's request). In the chip bar above
+  the list the colour is a fill, because a chip *is* a button. Where a tag appears as text
+  it is coloured semibold ink and never a pill: this list already decided that a reference
+  gets colour and not a box (§7, links), and a pill in running text would promise that the
+  tag is clickable, which it is not. A completed entry's tags go quiet along with the rest
+  of the line. The stored markdown is untouched — §4.1 keeps the tag as plain text, and
+  this is only how it is drawn.
+- **Where the tags sit in a row is a setting** (added 2026-07-30, at the owner's request),
+  remembered across launches. *At the end of the row* is the default: the tags come out of
+  the text and become chips against the right edge, so the note reads without them and the
+  tags form a column that can be scanned on its own. *In the text* leaves each tag where
+  it was typed. Two consequences of the default are worth stating rather than discovering.
+  Editing opens the **stored** line, tags and all, so the text changes shape under the
+  cursor — the one place where what the row shows is not what the file holds. And a line
+  that is nothing but tags (`#daily`) cannot be drawn this way at all without leaving an
+  empty row, so such a line falls back to the inline layout. The trailing chips are not
+  buttons: they sit inside a row whose click selects it and whose double-click starts an
+  edit, and a target that swallows those would be worse than one that does nothing —
+  filtering by tag stays on the chip bar above.
+- **The palette is eight colours, and its constraints were measured, not chosen.** A tag
+  is text, so each colour clears WCAG 4.5:1 against *both* window surfaces — which is why
+  the light steps are deep and wine-like rather than bright, the way light editor themes
+  are. Blue is excluded by a ±45° hue guard: it belongs to links, and a blue-ish tag reads
+  as a link that does not work. Teal is absent because sRGB cannot give cyan enough chroma
+  at that lightness to stop it reading as grey, and red and orange cannot both be
+  canonical because they sit ~29° apart and collapse into one pair. Stated plainly: eight
+  colours do **not** clear the pairwise-separation floors a chart palette must clear
+  (worst pair ΔE 12.1 light, 11.2 dark, against a floor of 15), and under deuteranopia
+  much of the set converges. That is a deliberate trade, sound only because a tag's own
+  name is always written beside its colour — here colour is a scanning aid, never what
+  carries identity.
+- **Which colour a tag gets:** a hash of its folded name picks a first choice, and if that
+  colour is already taken the tag moves to the least-used one; the result is recorded, so
+  a tag's colour never shifts because a *different* tag appeared later. The first eight
+  tags therefore get eight different colours. Hashing alone was tried and rejected on
+  measurement: it put two of five real tags on one colour and averaged 3.9 distinct
+  colours per five tags, spending the palette on collisions. The cost of recording is
+  that the same tag can be a different colour in another folder or on another Mac; within
+  one install it never moves, which is the property that matters, since the colour exists
+  to be recognised tomorrow. Right-clicking a chip overrides the colour by hand, and
+  *Automatic* removes the override rather than freezing today's answer.
 
 ## 8. Error handling
 

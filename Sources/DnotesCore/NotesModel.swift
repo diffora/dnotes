@@ -19,6 +19,26 @@ public enum CompletionFilter: String, CaseIterable, Codable, Sendable {
     }
 }
 
+/// Where a row draws its tags. A layout preference, not a change to the note: the line
+/// in the file is identical either way (§4.1).
+public enum TagLayout: String, CaseIterable, Codable, Sendable {
+    /// The tag stays where it was typed, coloured in place. What the row shows is exactly
+    /// what the file holds, so editing changes nothing about the text's shape.
+    case inline
+    /// The default: tags move to chips at the end of the row and the text reads without
+    /// them. The trade is visible on edit — the field opens on the *stored* line, tags and
+    /// all, so the text changes shape under the cursor. It is also the layout a line of
+    /// nothing but tags cannot be drawn in; `EntryRowView` falls back to `inline` there.
+    case trailing
+
+    public var title: String {
+        switch self {
+        case .inline: return "In the text"
+        case .trailing: return "At the end of the row"
+        }
+    }
+}
+
 /// One reversible change, described by what it takes to put things back.
 ///
 /// Steps name their target by day and text rather than by `EntryID`, because ids are
@@ -122,6 +142,15 @@ public final class NotesModel {
         return counts
             .map { TagCount(tag: $0.key, count: $0.value) }
             .sorted { ($1.count, $0.tag) < ($0.count, $1.tag) }
+    }
+
+    /// Every tag in the store, sorted, regardless of any filter.
+    ///
+    /// Unfiltered on purpose: this is what colours are assigned from, and a tag that is
+    /// merely hidden by the current filter must not be treated as new — it would take a
+    /// colour already given to something else the moment the filter changed.
+    public var allTags: [String] {
+        Set(entries.flatMap(\.tags)).sorted()
     }
 
     /// The three most frequent tags of the last 30 days (§6), ties broken
