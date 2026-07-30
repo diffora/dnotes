@@ -74,18 +74,48 @@ struct CaptureView: View {
         }
     }
 
+    /// Chips flowing left to right, not one tag per line.
+    ///
+    /// A line per tag made the list as tall as the tag count, and the panel window does
+    /// not grow past `maxSuggestionHeight` — which is why a long list used to be drawn
+    /// straight over the text field. Chips put fifteen tags where three used to fit, and
+    /// the scroll view takes whatever is left over.
     private var suggestionList: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            ForEach(Array(completion.suggestions.enumerated()), id: \.element.tag) { index, tag in
-                row(title: "#\(tag.tag)", detail: "\(tag.count)",
-                    selected: index == completion.selectedIndex)
+        ScrollViewReader { proxy in
+            ScrollView(.vertical) {
+                ChipWrapLayout {
+                    ForEach(Array(completion.suggestions.enumerated()), id: \.element.tag) { index, tag in
+                        chip(title: "#\(tag.tag)", detail: "\(tag.count)",
+                             color: settings.color(for: tag.tag).color,
+                             selected: index == completion.selectedIndex)
+                            .id(index)
+                    }
+                    if let name = completion.newTagName {
+                        chip(title: "#\(name)", detail: "new",
+                             color: settings.color(for: name).color,
+                             selected: completion.selectedIndex == completion.suggestions.count)
+                            .id(completion.suggestions.count)
+                    }
+                }
             }
-            if let name = completion.newTagName {
-                row(title: "#\(name)", detail: "new tag",
-                    selected: completion.selectedIndex == completion.suggestions.count)
+            // Without `fixedSize` a scroll view takes every point offered, so the panel
+            // would stand at its full height for a single suggestion.
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxHeight: Self.maxSuggestionHeight)
+            // ↑↓ can walk the selection past the visible rows, and a selection that
+            // cannot be seen is indistinguishable from no selection at all.
+            .onChange(of: completion.selectedIndex) {
+                withAnimation(.easeOut(duration: 0.12)) {
+                    proxy.scrollTo(completion.selectedIndex, anchor: .center)
+                }
             }
         }
     }
+
+    /// About five rows of chips. Past that the list scrolls rather than the panel
+    /// growing: this window is anchored near the top of the screen, and a panel that
+    /// keeps growing downward eventually runs off the bottom of it.
+    private static let maxSuggestionHeight: CGFloat = 132
 
     /// One quiet row: the frequent tags of §6, plus the two ways out of the panel.
     /// The way out has to be written down somewhere — with the menu bar item hidden
@@ -103,16 +133,20 @@ struct CaptureView: View {
         .foregroundStyle(.secondary)
     }
 
-    private func row(title: String, detail: String, selected: Bool) -> some View {
-        HStack {
-            Text(title).font(.callout)
-            Spacer()
-            Text(detail).font(.caption).foregroundStyle(.secondary)
+    /// The same chip the main window draws above its list, so a tag looks like itself
+    /// wherever it appears. Selection gets both a stronger fill and a border: every chip
+    /// is tinted, so the tint alone cannot carry the difference.
+    private func chip(title: String, detail: String, color: Color, selected: Bool) -> some View {
+        HStack(spacing: 4) {
+            Text(title)
+            Text(detail).foregroundStyle(.secondary)
         }
-        .padding(.horizontal, 6)
+        .font(.caption.weight(.semibold))
+        .foregroundStyle(color)
+        .padding(.horizontal, 8)
         .padding(.vertical, 3)
-        .background(selected ? Color.accentColor.opacity(0.25) : Color.clear,
-                    in: RoundedRectangle(cornerRadius: 5))
+        .background(color.opacity(selected ? 0.32 : 0.16), in: Capsule())
+        .overlay(Capsule().strokeBorder(color.opacity(selected ? 0.9 : 0), lineWidth: 1.5))
     }
 
     private func submit(keepOpen: Bool) {

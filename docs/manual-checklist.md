@@ -68,6 +68,23 @@ Dock icon **on**:
 - [ ] Typing more narrows it; `↑↓` moves the highlight; `⇥` completes.
 - [ ] An unknown tag offers a "new tag" row and `⇥` accepts what was typed.
 - [ ] `⌘1`–`⌘3` append a frequent tag at the end without moving the caret.
+
+### Completion layout (added 2026-07-30, after the panel drew over its own field)
+
+The panel window used to keep its build-time height forever, so a list taller than
+120pt overflowed on both sides of it. `ChipFlowTests` covers where rows break; the rest
+is AppKit sizing and has to be looked at.
+
+- [ ] `#` with a folder that has **many** tags: the chips wrap into rows, the panel
+      grows downward, and the text field stays exactly where it was.
+- [ ] The text field is never drawn outside the panel's rounded background — this is
+      the bug itself, so check it at several tag counts (1, 5, 20, everything).
+- [ ] Past about five rows of chips the list scrolls instead of the panel growing, and
+      the panel never reaches the bottom of the screen.
+- [ ] `↑↓` past the visible rows scrolls the selection into view rather than moving a
+      highlight nobody can see.
+- [ ] Narrowing the filter shrinks the panel again, and deleting the `#` returns it to
+      the single hint row it started at.
 - [ ] `⏎` with no tag at all still saves the line.
 - [ ] A URL with an anchor (`https://example.com/page#anchor`) does not open completion.
 

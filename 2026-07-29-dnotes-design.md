@@ -252,6 +252,13 @@ changes.
     "create tag" item; `⇥` completes, `↑↓` selects;
   - tags are optional: `⏎` with no tag saves the entry into the day as is.
 - A tag stays part of the line's text in the file — there are no hidden fields.
+- **Amended 2026-07-30 (bug fix):** completion draws its tags as chips flowing left
+  to right, not one per line, and the list scrolls past about five rows. It used to be
+  a line per tag inside a panel window whose height never changed from the 120pt it was
+  built with — so a long list was laid out over the text field rather than under it.
+  Two things were wrong and both are fixed: the window now follows its content's height
+  (holding the **top** edge still, so the field never moves under the reader), and the
+  content is bounded, so no tag list can push the panel off the bottom of the screen.
 
 ## 7. Main window
 

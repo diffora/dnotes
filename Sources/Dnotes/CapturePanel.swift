@@ -26,6 +26,21 @@ final class KeyablePanel: NSPanel {
     }
 }
 
+/// Reports when its SwiftUI content wants a different size.
+///
+/// `sizingOptions = [.intrinsicContentSize]` only makes a hosting view *state* its size;
+/// nothing resizes the window for it. Left alone, the panel keeps the height it was
+/// built with, SwiftUI lays a taller list out inside it anyway, and the overflow is
+/// drawn straight over the text field. This hook is how the window hears about it.
+final class ContentSizedHostingView<Content: View>: NSHostingView<Content> {
+    var onContentSizeChange: (() -> Void)?
+
+    override func invalidateIntrinsicContentSize() {
+        super.invalidateIntrinsicContentSize()
+        onContentSizeChange?()
+    }
+}
+
 @MainActor
 final class CapturePanel {
     /// The §6 fallback switch. `false` is the primary non-activating path; `true`
@@ -72,7 +87,7 @@ final class CapturePanel {
         panel.backgroundColor = .clear
         panel.isOpaque = false
 
-        let hosting = NSHostingView(rootView: CaptureView(
+        let hosting = ContentSizedHostingView(rootView: CaptureView(
             model: model,
             settings: settings,
             onSubmit: { [weak self] text, keepOpen in self?.submit(text, keepOpen: keepOpen) },
@@ -81,6 +96,11 @@ final class CapturePanel {
         ))
         hosting.sizingOptions = [.intrinsicContentSize]
         panel.contentView = hosting
+        // Deferred by a turn of the run loop: during the invalidation itself the hosting
+        // view still reports the size it is about to stop having.
+        hosting.onContentSizeChange = { [weak self] in
+            DispatchQueue.main.async { MainActor.assumeIsolated { self?.fitToContent() } }
+        }
 
         panel.onCommandShortcut = { [weak self] character in
             guard let self else { return false }
@@ -140,6 +160,23 @@ final class CapturePanel {
     private func cancel(keepingDraft draft: String) {
         currentText = draft
         hide()
+    }
+
+    /// Grows and shrinks the panel with its content, holding the **top** edge still.
+    ///
+    /// The top edge is the whole point: the text field sits against it, and a field that
+    /// slid down the screen every time a suggestion appeared would move out from under
+    /// the eye that is reading it. The list is what grows, downward, the way a menu does.
+    private func fitToContent() {
+        guard let hosting = panel.contentView else { return }
+        let height = hosting.fittingSize.height
+        // The guard is also what stops a resize from feeding itself: laying out at the
+        // new size invalidates the size again, and the second pass has nothing to do.
+        guard height > 0, abs(panel.frame.height - height) > 0.5 else { return }
+
+        let top = panel.frame.maxY
+        panel.setContentSize(NSSize(width: panel.frame.width, height: height))
+        panel.setFrameOrigin(NSPoint(x: panel.frame.minX, y: top - panel.frame.height))
     }
 
     /// A capture panel belongs where a Spotlight window would be, not dead centre.
