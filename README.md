@@ -7,8 +7,9 @@ Press `⌥Space` anywhere, type one line, press `⏎`. Focus returns to whatever
 doing and the line is appended to today's heading in `YYYY-MM.md`. Delete the app and
 the notes are still there, readable in any editor and diffable in git.
 
-The hotkey is the way in, from any app including fullscreen ones. There is a Dock icon
-and a menu bar item too, but neither is where the app is meant to be used from.
+The hotkey is the way in, from any app including fullscreen ones. There is a menu bar
+item too, and a Dock icon if you want one — Settings → Appearance — but neither is where
+the app is meant to be used from.
 
 ```markdown
 ## 2026-07-29
@@ -96,8 +97,8 @@ tests are. `Dnotes` is the shell: status item, a non-activating `NSPanel` for ca
 `NSWindow` for the list, a main menu. AppKit owns that shell deliberately: keyboard and
 pointer behaviour this central should not depend on which view happens to hold focus, and
 the shell was first written for a menu-bar-only app, which has no menu bar for SwiftUI to
-hang shortcuts on. The app became a regular one with a Dock icon — a full menu bar in the
-frontmost app hid the status item — and the shell was already in the right place.
+hang shortcuts on. Whether the app is menu-bar-only is a setting now, so the shell has to
+work both ways — and it was already in the right place for that.
 
 **Storage is behind a protocol.** `NotesRepository` is the seam;
 `MarkdownNotesRepository` is the file-backed implementation and `InMemoryNotesRepository`
