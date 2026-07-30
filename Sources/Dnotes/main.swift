@@ -5,12 +5,16 @@ import AppKit
 // AppKit (NSPanel for capture, NSWindow for the list). One pattern beats two, and
 // the icon's lifetime becomes something this code owns outright.
 //
-// `.regular`, not `.accessory`: the app keeps a Dock icon and appears in ⌘Tab, which
-// is the owner's call after a full menu bar turned out to hide the status item (§7 is
-// amended in the design doc). The capture panel stays non-activating regardless —
-// that behaviour comes from the panel's style mask, not from the activation policy.
+// The activation policy is a setting now (`SettingsStore.showsDockIcon`, off by
+// default), so it is applied here rather than fixed: `Info.plist` only decides how the
+// process starts, and the delegate has the stored answer. The delegate is built first
+// for exactly that reason — the setting is read through the store, not through a second
+// `UserDefaults` lookup that could drift from it.
+//
+// The capture panel is non-activating either way: that comes from the panel's style
+// mask, not from the activation policy.
 let application = NSApplication.shared
 let delegate = AppDelegate()
 application.delegate = delegate
-application.setActivationPolicy(.regular)
+delegate.applyActivationPolicy()
 application.run()

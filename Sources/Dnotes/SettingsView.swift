@@ -4,8 +4,38 @@ import DnotesCore
 struct SettingsView: View {
     let delegate: AppDelegate
 
+    /// Lives here rather than on the delegate: the delegate is not observable, and the
+    /// scope wanted is exactly this window's lifetime — the restart offer belongs to the
+    /// switch that was just flipped, not to the app forever after.
+    @State private var dockIconWasSwitched = false
+
     var body: some View {
         Form {
+            Section("Appearance") {
+                Toggle("Show in Dock", isOn: Binding(
+                    get: { delegate.composition.settings.showsDockIcon },
+                    set: { shows in
+                        delegate.composition.settings.showsDockIcon = shows
+                        delegate.applyActivationPolicy()
+                        dockIconWasSwitched = true
+                    }))
+                Text("Without the Dock icon dnotes also leaves ⌘Tab and the menu bar at "
+                     + "the top of the screen. The menu bar icon, \(captureKey) and "
+                     + "\(notesKey) work either way — with the Dock icon off they are "
+                     + "the way in.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                if dockIconWasSwitched {
+                    HStack {
+                        Text("The menu bar can take a relaunch to settle.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Button("Restart dnotes") { delegate.restart() }
+                    }
+                }
+            }
+
             Section("Notes folder") {
                 HStack {
                     Text(delegate.composition.settings.folderURL.path)
@@ -61,4 +91,7 @@ struct SettingsView: View {
         .formStyle(.grouped)
         .frame(width: 460)
     }
+
+    private var captureKey: String { delegate.composition.settings.captureHotKey.displayString }
+    private var notesKey: String { delegate.composition.settings.mainWindowHotKey.displayString }
 }

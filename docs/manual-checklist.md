@@ -30,17 +30,37 @@ Quit: `⌘Q`, the Dock icon's menu, or `pkill -f dnotes.app`.
 If typed characters do **not** reach the field, flip
 `CapturePanel.usesActivationFallback` to `true` (§6 fallback) and re-run this section.
 
-## Dock and menus (added 2026-07-29, when LSUIElement became false)
+## Dock and menus (rewritten 2026-07-30, when the Dock icon became a setting)
 
-- [ ] The Dock shows the app icon from `images/icon.png`.
+Both states of "Show in Dock" have to be walked. The automated tests cover the stored
+preference; nothing below can be unit-tested, because activation policy is global
+AppKit state.
+
+Dock icon **off** (the default):
+
+- [ ] A fresh launch shows no Dock icon and no bounce, and the app is absent from `⌘Tab`.
+- [ ] The menu bar icon is there, and `⌥Space` and `⌥⇧Space` both work — with no Dock
+      icon these are the only way in, so a failure here means a locked-out app.
+- [ ] `⌘C`, `⌘V`, `⌘A`, `⌘Z` work in the capture field and the inline row editor, and
+      `⌘Q` quits. There is no drawn menu bar in this mode; the key equivalents still
+      have to reach the key window.
+
+Dock icon **on**:
+
+- [ ] Turning the switch on makes the icon appear without a relaunch, and the Settings
+      window still takes keystrokes afterwards.
+- [ ] The Dock shows the app icon, and the app appears in `⌘Tab`.
+- [ ] The menu bar at the top of the screen is drawn and its items work.
 - [ ] Clicking the Dock icon with no window open opens the notes list.
-- [ ] The app appears in `⌘Tab`.
-- [ ] `⌘C`, `⌘V`, `⌘A`, `⌘Z` work inside the capture field and the inline row editor.
-- [ ] `⌘Q` quits.
-- [ ] **Re-verify the primary scenario after this change:** `⌥Space` from another app
-      still does not steal focus, and `⏎` returns it. The panel is non-activating
-      because of its style mask, not the activation policy — but this is the one
-      assumption the whole app rests on, so it gets checked again.
+- [ ] Turning the switch back off makes the icon disappear, and the Settings window
+      still takes keystrokes.
+- [ ] "Restart dnotes" appears only after the switch is touched, and relaunches into the
+      chosen mode.
+
+- [ ] **Re-verify the primary scenario in both modes:** `⌥Space` from another app still
+      does not steal focus, and `⏎` returns it. The panel is non-activating because of
+      its style mask, not the activation policy — but this is the one assumption the
+      whole app rests on, so it gets checked on both sides of the switch.
 
 ## Tagging
 

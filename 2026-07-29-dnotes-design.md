@@ -267,6 +267,16 @@ changes.
   the window appears with a keyboard that does nothing. Unlike the capture
   panel, activation is wanted here — you open the main window in order to work
   in it.
+- **Amended 2026-07-30:** the Dock icon is a setting rather than a decision —
+  `SettingsStore.showsDockIcon`, a switch in Settings, applied live by
+  `AppDelegate.applyActivationPolicy()`. It is **off by default**: a tool for capturing
+  one line does not need a slot in the Dock and in `⌘Tab` all day. The notch problem the
+  2026-07-29 amendment describes has not gone away — it is now carried by the hotkeys,
+  which are registered before any window exists and report a conflict in Settings rather
+  than failing silently. With the Dock icon off, `⌥Space` and `⌥⇧Space` are the way in.
+  Switching live needs `NSApp.activate` afterwards or the menu bar is left undrawn and
+  the settings window unresponsive, and Settings offers a restart beside the switch for
+  what re-activation does not settle.
 - A single reverse-chronological list of all entries. Days are separators in the
   flow. There is no folder sidebar and no split between "notes" and "tasks".
 - Search in the toolbar filters the list by substring as you type (case- and
@@ -459,7 +469,8 @@ single word "draft":
 ## 11. Build and distribution
 
 Built with SwiftPM; the `.app` bundle (`Info.plist`, app icon generated from
-`images/icon.png`) is assembled by a script. `LSUIElement` is `false` — see the
+`images/icon.png`) is assembled by a script. `LSUIElement` is `true` again, but it is
+now only the launch default — the activation policy is a setting, see the 2026-07-30
 amendment in §7. Signing and notarization are out of scope: the
 app is for personal use, and the bundle is ad-hoc signed, which is enough to run
 it locally.

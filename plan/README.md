@@ -71,10 +71,12 @@ Every task's requirements implicitly include this section.
 - **The Swift tools version stays 6.2** even though the toolchain is 6.3.3: nothing here needs 6.3,
   and a lower floor keeps the package buildable from Command Line Tools.
 - **The app is not sandboxed**, so folder access is a plain path — no security-scoped bookmarks.
-- **`LSUIElement` is `false`** (amended 2026-07-29, see design §7): the app has a Dock
-  icon and appears in `⌘Tab`. It began as a menu-bar-only app, but a full menu bar hid
-  the status item on the owner's machine. The capture panel's non-activating behaviour
-  comes from its style mask and is unaffected by the activation policy.
+- **The Dock icon is a setting** (`SettingsStore.showsDockIcon`, amended 2026-07-30, see
+  design §7): off by default, so the app is a menu-bar accessory and stays out of
+  `⌘Tab`. `LSUIElement` in `Info.plist` is only the launch default; `main.swift` applies
+  the stored setting through `AppDelegate.applyActivationPolicy()`. The capture panel's
+  non-activating behaviour comes from its style mask and is unaffected by the activation
+  policy either way.
 - **The app installs a main menu** (`MainMenu.swift`). Not decoration: macOS dispatches
   `⌘`-key equivalents through the main menu before offering them to windows, so
   without an Edit menu the capture field has no copy, paste, select-all or undo, and

@@ -18,6 +18,7 @@ public final class SettingsStore {
         tagLayout = defaults.string(forKey: "dnotes.tagLayout")
             .flatMap(TagLayout.init(rawValue:)) ?? .trailing
         issueURLTemplate = defaults.string(forKey: "dnotes.issueURLTemplate") ?? ""
+        showsDockIcon = defaults.object(forKey: "dnotes.showsDockIcon") as? Bool ?? false
         tagColorOverrides = Self.readSlots(defaults, "dnotes.tagColorOverrides")
         tagColorAssignments = Self.readSlots(defaults, "dnotes.tagColorAssignments")
     }
@@ -38,6 +39,20 @@ public final class SettingsStore {
     /// needed: there is only one panel (§8).
     public var panelDraft: String {
         didSet { defaults.set(panelDraft, forKey: "dnotes.panelDraft") }
+    }
+
+    /// Whether the app is a regular app with a Dock icon and a place in ⌘Tab, or a
+    /// menu-bar accessory. Off by default: the app is reached by hotkey, and a tool for
+    /// capturing one line does not need to occupy the Dock all day.
+    ///
+    /// Read through `object(forKey:)` rather than `bool(forKey:)` so "never chosen" is
+    /// distinguishable from "chosen false" — the two agree today, and would stop
+    /// agreeing the moment this default changed.
+    ///
+    /// The design doc's §7 amendment picked the Dock icon because a full menu bar can
+    /// hide the status item behind the notch. With this off, the hotkeys are the door.
+    public var showsDockIcon: Bool {
+        didSet { defaults.set(showsDockIcon, forKey: "dnotes.showsDockIcon") }
     }
 
     public var completionFilter: CompletionFilter {

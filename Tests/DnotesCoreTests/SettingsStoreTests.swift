@@ -42,6 +42,24 @@ import Testing
     #expect(HotKeyCombo(keyCode: 0, modifiers: HotKeyCombo.command).displayString == "⌘A")
 }
 
+// MARK: - Dock icon
+
+@MainActor
+@Test func theDockIconIsOffUntilSomebodyAsksForIt() {
+    #expect(SettingsStore(defaults: makeTestDefaults()).showsDockIcon == false)
+}
+
+@MainActor
+@Test func theDockIconChoiceSurvivesARestartInBothDirections() {
+    let defaults = makeTestDefaults()
+
+    SettingsStore(defaults: defaults).showsDockIcon = true
+    #expect(SettingsStore(defaults: defaults).showsDockIcon == true)
+
+    SettingsStore(defaults: defaults).showsDockIcon = false
+    #expect(SettingsStore(defaults: defaults).showsDockIcon == false)
+}
+
 // MARK: - tag layout
 
 @MainActor

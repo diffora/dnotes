@@ -103,7 +103,10 @@ A new section in `SettingsView`, above "Shortcuts":
 - A caption: without the Dock icon the app leaves ⌘Tab and the menu bar at the
   top of the screen; the menu bar icon and both hotkeys work either way.
 - A "Restart dnotes" button, shown **only after the toggle has been changed in
-  this session** (one `Bool` on the delegate). A restart button that is always
+  this session** — `@State` in the view rather than a property on the delegate,
+  which is an `NSObject` and not observable, so SwiftUI would never redraw for it.
+  The view's lifetime is also the right scope: the offer belongs to the switch
+  that was just flipped. A restart button that is always
   present reads as an admission that the app does not work; one that appears next
   to the switch that might have unsettled the menu bar reads as a remedy.
 
@@ -130,8 +133,11 @@ nothing to launch the new instance.
 Unit (`SettingsStoreTests`):
 
 - `showsDockIcon` defaults to `false` when nothing is stored.
-- A stored `true` survives a fresh `SettingsStore` over the same defaults.
-- A stored `false` is read as `false` and not confused with absence.
+- The choice survives a fresh `SettingsStore` in both directions.
+
+A third test was drafted — "a stored `false` is not confused with absence" — and
+dropped: while the default is `false` no production mistake would make it fail,
+and a test that cannot fail is worse than no test, because it looks like cover.
 
 Activation policy is AppKit global state and is not unit-tested. It goes to
 `docs/manual-checklist.md`, replacing the "Dock and menus" section written on

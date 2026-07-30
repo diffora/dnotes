@@ -56,6 +56,33 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func quitFromMenu() { NSApp.terminate(nil) }
 
+    // MARK: - Dock icon
+
+    /// Reconciles the activation policy with `showsDockIcon`. Called at launch and
+    /// whenever the setting changes.
+    ///
+    /// The re-activation is not decoration. Promoting `.accessory` → `.regular` leaves
+    /// AppKit without a drawn menu bar until the app becomes active again, and demoting
+    /// the other way can drop the key window — either way the window the user just
+    /// clicked in is left with a keyboard that does nothing. At launch there is no
+    /// settings window and nobody to interrupt, so the same call is right there too.
+    func applyActivationPolicy() {
+        NSApp.setActivationPolicy(composition.settings.showsDockIcon ? .regular : .accessory)
+        NSApp.activate(ignoringOtherApps: true)
+        settingsWindow?.makeKeyAndOrderFront(nil)
+    }
+
+    /// Launches a second instance and quits this one. In that order: terminating first
+    /// would leave nothing running to start the replacement.
+    func restart() {
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.createsNewApplicationInstance = true
+        NSWorkspace.shared.openApplication(at: Bundle.main.bundleURL,
+                                           configuration: configuration) { _, _ in
+            Task { @MainActor in NSApp.terminate(nil) }
+        }
+    }
+
     /// Clicking the Dock icon of an app with no open window has to do something, or
     /// the icon looks broken. The list is the reasonable answer.
     func applicationShouldHandleReopen(_ sender: NSApplication,
